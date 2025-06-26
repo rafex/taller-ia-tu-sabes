@@ -1,5 +1,6 @@
 const messagesDiv = document.getElementById('messages');
 const form = document.getElementById('msgForm');
+const loadBtn = document.getElementById('loadBtn');
 let offset = 0;
 const limit = 5;
 let loading = false;
@@ -23,12 +24,14 @@ function fetchMessages() {
         });
 }
 
+// Scroll infinito
 messagesDiv.addEventListener('scroll', () => {
     if (messagesDiv.scrollTop + messagesDiv.clientHeight >= messagesDiv.scrollHeight) {
         fetchMessages();
     }
 });
 
+// Envío de mensaje: solo POST, sin obtener mensajes automáticamente
 form.addEventListener('submit', (e) => {
     e.preventDefault();
     const user = document.getElementById('user').value;
@@ -37,12 +40,28 @@ form.addEventListener('submit', (e) => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user, content })
-    }).then(() => {
-        messagesDiv.innerHTML = '';
-        offset = 0;
-        fetchMessages();
+    })
+    .then(res => {
+        if (res.ok) {
+            alert('Mensaje enviado. Haz clic en "Cargar mensajes" para ver los últimos.');
+            form.reset();
+        } else {
+            alert('Error al enviar mensaje');
+        }
     });
 });
 
-// Cargar primeros mensajes
-document.addEventListener('DOMContentLoaded', fetchMessages);
+// Botón para cargar últimos mensajes manualmente
+loadBtn.addEventListener('click', () => {
+    messagesDiv.innerHTML = '';
+    offset = 0;
+    loading = false;
+    fetchMessages();
+});
+
+// Cargar primeros mensajes al inicio
+window.addEventListener('DOMContentLoaded', () => {
+    // Initial fetch or wait user to click?
+    // Para obligar a GET manual, comentamos inicial
+    // fetchMessages();
+});
