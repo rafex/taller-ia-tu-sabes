@@ -1,0 +1,17 @@
+replicaCount: 1
+
+image:
+  backend:
+    repository: taller-upt-backend
+    tag: latest
+  frontend:
+    repository: taller-upt-frontend
+    tag: latest
+
+service:
+  backend:
+    type: ClusterIP
+    port: 8080
+  frontend:
+    type: ClusterIP
+    port: 80

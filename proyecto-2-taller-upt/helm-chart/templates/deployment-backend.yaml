@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "twitter-app.fullname" . }}-backend
+  labels:
+    app: {{ include "twitter-app.name" . }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "twitter-app.name" . }}-backend
+  template:
+    metadata:
+      labels:
+        app: {{ include "twitter-app.name" . }}-backend
+    spec:
+      containers:
+        - name: backend
+          image: "{{ .Values.image.backend.repository }}:{{ .Values.image.backend.tag }}"
+          ports:
+            - containerPort: {{ .Values.service.backend.port }}
