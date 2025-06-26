@@ -1,0 +1,74 @@
+---
+name: Build and Publish Docker Images
+
+on:
+  workflow_dispatch:
+    inputs:
+      logLevel:
+        description: 'Log level'
+        required: true
+        default: 'warning'
+  push:
+    branches:
+      - main
+    paths:
+      - 'proyecto-taller-upt/**/Dockerfile'
+      - 'proyecto-2-taller-upt/**/Dockerfile'
+      - '.github/workflows/docker-publish.yml'
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read          # para checkout
+      packages: write         # para publicar en GHCR
+      id-token: write         # si usas OIDC (no necesario en este caso)
+    env:
+      IMAGE_VERSION: latest   # versión de las imágenes
+    strategy:
+      matrix:
+        include:
+          - name: proyecto-taller-upt-backend
+            context: proyecto-taller-upt/backend
+            dockerfile: proyecto-taller-upt/backend/Dockerfile
+          - name: proyecto-taller-upt-frontend
+            context: proyecto-taller-upt/frontend
+            dockerfile: proyecto-taller-upt/frontend/Dockerfile
+          - name: proyecto-2-taller-upt-backend
+            context: proyecto-2-taller-upt/backend
+            dockerfile: proyecto-2-taller-upt/backend/Dockerfile
+          - name: proyecto-2-taller-upt-frontend
+            context: proyecto-2-taller-upt/frontend
+            dockerfile: proyecto-2-taller-upt/frontend/Dockerfile
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU (para multi-arch, opcional)
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: all
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GH_TOKEN }}
+
+      - name: Build and push ${{ matrix.name }}
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.dockerfile }}
+          platforms: linux/amd64
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/${{ matrix.name }}:${{ env.IMAGE_VERSION }}
+
+      - name: Verify published images
+        run: |
+          echo "Publicadas:"
+          echo "- ghcr.io/${{ github.repository_owner }}/${{ matrix.name }}:${{ env.IMAGE_VERSION }}"
