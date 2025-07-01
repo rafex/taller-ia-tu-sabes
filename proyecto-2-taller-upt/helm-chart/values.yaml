@@ -1,17 +1,62 @@
+# valores para desplegar proyecto-2-taller-upt en Kubernetes
+
+# Réplicas y autoescalado
 replicaCount: 1
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 1
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
+
+# Imágenes del backend y frontend en GitHub Container Registry
+dockerRegistry:
+  pullSecrets:
+    - name: ghcr-pull-secret-mvp
 
 image:
   backend:
-    repository: taller-upt-backend
+    repository: ghcr.io/rafex/proyecto-2-taller-upt-backend
     tag: latest
+    pullPolicy: IfNotPresent
   frontend:
-    repository: taller-upt-frontend
+    repository: ghcr.io/rafex/proyecto-2-taller-upt-frontend
     tag: latest
+    pullPolicy: IfNotPresent
 
+# Servicios y puertos
+enableServices: true
 service:
   backend:
     type: ClusterIP
     port: 8080
+    targetPort: 8080
   frontend:
     type: ClusterIP
     port: 80
+    targetPort: 80
+
+# Ingress para el frontend
+ingress:
+  enabled: true
+  className: haproxy
+  annotations:
+    ingress.kubernetes.io/rewrite-target: /
+    ingress.kubernetes.io/ssl-redirect: "false"
+    ingress.kubernetes.io/backend-protocol: "http"
+  hosts:
+    - host: raul.demo.rafex.cloud
+      paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: proyecto-2-taller-upt-frontend
+              port:
+                number: 80
+
+# No crear ServiceAccount adicional
+serviceAccount:
+  create: false
+  automount: false

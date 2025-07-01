@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  # Usa el nombre del release con sufijo frontend
+  name: {{ .Release.Name }}-frontend
+  labels:
+    {{- include "poc-frontend.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.frontend.type }}
+  ports:
+    - name: http
+      port: {{ .Values.service.frontend.port }}
+      targetPort: {{ .Values.service.frontend.targetPort }}
+      protocol: TCP
+  selector:
+    {{- include "poc-frontend.selectorLabels" . | nindent 4 }}

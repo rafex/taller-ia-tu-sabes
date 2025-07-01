@@ -1,21 +1,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "twitter-app.fullname" . }}-backend
+  name: {{ .Release.Name }}-backend
   labels:
-    app: {{ include "twitter-app.name" . }}
+    app: {{ .Release.Name }}-backend
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      app: {{ include "twitter-app.name" . }}-backend
+      app: {{ .Release.Name }}-backend
   template:
     metadata:
       labels:
-        app: {{ include "twitter-app.name" . }}-backend
+        app: {{ .Release.Name }}-backend
     spec:
+      serviceAccountName: default
       containers:
         - name: backend
           image: "{{ .Values.image.backend.repository }}:{{ .Values.image.backend.tag }}"
+          imagePullPolicy: {{ .Values.image.backend.pullPolicy }}
           ports:
             - containerPort: {{ .Values.service.backend.port }}
